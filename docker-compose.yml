@@ -1,0 +1,90 @@
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: qris_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qris_user
+      POSTGRES_PASSWORD: qris_pass
+      POSTGRES_DB: qris_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qris_user -d qris_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - qris_net
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: qris_redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - qris_net
+
+  # ── DB Migrations (one-shot) ─────────────────────────────────────────────────
+  migrate:
+    image: migrate/migrate:v4.17.1
+    container_name: qris_migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./db/migrations:/migrations
+    command: >
+      -path=/migrations
+      -database=postgres://qris_user:qris_pass@postgres:5432/qris_db?sslmode=disable
+      up
+    restart: on-failure
+    networks:
+      - qris_net
+
+  # ── Application ─────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qris_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Override config.json values via env vars (Viper AutomaticEnv maps DB_HOST → database.host)
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_USERNAME: qris_user
+      DATABASE_PASSWORD: qris_pass
+      DATABASE_NAME: qris_db
+      DATABASE_SSLMODE: disable
+      REDIS_ADDR: redis:6379
+      WEB_PORT: "3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - qris_net
+
+volumes:
+  postgres_data:
+
+networks:
+  qris_net:
+    driver: bridge

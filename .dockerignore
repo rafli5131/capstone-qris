@@ -1,0 +1,7 @@
+.git
+.github
+*.md
+test/
+api/
+Makefile
+.env*

@@ -1,0 +1,28 @@
+{
+  "web": {
+    "port": 3000,
+    "prefork": false
+  },
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "username": "qris_user",
+    "password": "qris_pass",
+    "name": "qris_db",
+    "sslmode": "disable",
+    "max_idle_conns": 10,
+    "max_open_conns": 100,
+    "conn_max_lifetime": 3600
+  },
+  "redis": {
+    "addr": "localhost:6379",
+    "password": "",
+    "db": 0,
+    "pool_size": 100,
+    "inquiry_ttl_seconds": 300
+  },
+  "app": {
+    "log_level": "info",
+    "hmac_timestamp_tolerance_seconds": 300
+  }
+}

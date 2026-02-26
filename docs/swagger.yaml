@@ -1,0 +1,328 @@
+basePath: /
+definitions:
+  model.ErrorResponse:
+    properties:
+      errors:
+        type: string
+      status:
+        type: string
+    type: object
+  model.InquiryResponse:
+    properties:
+      city:
+        type: string
+      fixed_amount:
+        type: number
+      inquiry_id:
+        type: string
+      merchant_id:
+        type: string
+      merchant_name:
+        type: string
+      terminal_id:
+        type: string
+    type: object
+  model.InquiryResponseEnvelope:
+    properties:
+      data:
+        $ref: '#/definitions/model.InquiryResponse'
+      metadata:
+        $ref: '#/definitions/model.Metadata'
+      status:
+        type: string
+    type: object
+  model.MerchantResponse:
+    properties:
+      city:
+        type: string
+      is_active:
+        type: boolean
+      is_new:
+        type: boolean
+      mcc:
+        type: string
+      merchant_id:
+        type: string
+      merchant_name:
+        type: string
+    type: object
+  model.MerchantResponseEnvelope:
+    properties:
+      data:
+        $ref: '#/definitions/model.MerchantResponse'
+      status:
+        type: string
+    type: object
+  model.Metadata:
+    properties:
+      latency_ms:
+        type: integer
+      source:
+        description: '"cache" or "database"'
+        type: string
+    type: object
+  model.PaymentRequest:
+    properties:
+      amount:
+        type: number
+      inquiry_id:
+        type: string
+      payment_method:
+        enum:
+        - balance
+        type: string
+      pincode:
+        type: string
+      user_id:
+        type: string
+    required:
+    - amount
+    - inquiry_id
+    - payment_method
+    - pincode
+    - user_id
+    type: object
+  model.PaymentResponse:
+    properties:
+      estimated_completion:
+        type: string
+      message:
+        type: string
+      status:
+        type: string
+      transaction_id:
+        type: string
+    type: object
+  model.PaymentResponseEnvelope:
+    properties:
+      data:
+        $ref: '#/definitions/model.PaymentResponse'
+      status:
+        type: string
+    type: object
+  model.TransactionStatusResponse:
+    properties:
+      final_balance:
+        type: number
+      status:
+        type: string
+      timestamp:
+        type: string
+      transaction_id:
+        type: string
+    type: object
+host: localhost:3000
+info:
+  contact: {}
+  description: High-performance QRIS payment microservice with Redis caching and optimistic
+    locking.
+  title: QRIS Payment API
+  version: "1.0"
+paths:
+  /api/qris/inquiry/{qris_payload}:
+    get:
+      consumes:
+      - application/json
+      description: Get merchant data by QRIS payload (decoded if URL-encoded).
+      parameters:
+      - description: QRIS payload (raw or URL-encoded)
+        in: path
+        name: qris_payload
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.InquiryResponseEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: QRIS inquiry
+      tags:
+      - qris
+  /api/qris/inquiry/image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Get merchant data by QRIS image (QR code).
+      parameters:
+      - description: QR code image
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.InquiryResponseEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: QRIS inquiry from image
+      tags:
+      - qris
+  /api/qris/merchant/image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create or re-activate a merchant using a QRIS image (QR code).
+      parameters:
+      - description: QR code image
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MerchantResponseEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: Add merchant from image
+      tags:
+      - merchant
+  /api/qris/payment:
+    post:
+      consumes:
+      - application/json
+      description: Submit payment for a QRIS inquiry.
+      parameters:
+      - description: Payment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.PaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/model.PaymentResponseEnvelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: Create payment
+      tags:
+      - qris
+  /api/qris/status/{transaction_id}:
+    get:
+      consumes:
+      - application/json
+      description: Fetch current status and final balance for a transaction.
+      parameters:
+      - description: Transaction ID
+        in: path
+        name: transaction_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.TransactionStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: Get transaction status
+      tags:
+      - transaction
+securityDefinitions:
+  X-Client-Id:
+    in: header
+    name: X-Client-Id
+    type: apiKey
+  X-Client-Key:
+    in: header
+    name: X-Client-Key
+    type: apiKey
+swagger: "2.0"
