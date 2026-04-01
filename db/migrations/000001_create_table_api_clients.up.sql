@@ -9,4 +9,4 @@ CREATE TABLE api_clients (
 
 -- Seed a default test client
 INSERT INTO api_clients (client_id, client_secret, status)
-VALUES ('MK-9921-X', 'penyakit-capstone-gila', 'ACTIVE');
+VALUES ('MK-9921-X', 'super-secret-key-change-in-production', 'ACTIVE');

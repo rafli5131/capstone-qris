@@ -47,7 +47,13 @@ func (ctrl *PaymentController) Pay(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
 
-	resp, err := ctrl.PaymentUseCase.Pay(c.Context(), &req)
+	accountIDRaw := c.Locals("account_id")
+	accountID, ok := accountIDRaw.(string)
+	if !ok || accountID == "" {
+		return fiber.NewError(fiber.StatusUnauthorized, "missing account id")
+	}
+
+	resp, err := ctrl.PaymentUseCase.Pay(c.Context(), accountID, &req)
 	if err != nil {
 		ctrl.Log.WithError(err).Warn("payment failed")
 		return err

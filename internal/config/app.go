@@ -43,20 +43,37 @@ func Bootstrap(config *BootstrapConfig) {
 	transactionUseCase := usecase.NewTransactionUseCase(
 		config.DB, config.Log, transactionRepo, accountRepo,
 	)
-
-	sigMiddleware := middleware.NewSignatureMiddleware(
+	merchantUseCase := usecase.NewMerchantUseCase(
 		config.DB, config.Log,
-		apiClientRepo,
+		merchantRepo, transactionRepo,
 	)
+	adminUseCase := usecase.NewAdminUseCase(
+		config.DB, config.Log, config.Validator,
+		apiClientRepo, transactionRepo,
+	)
+	authUseCase := usecase.NewAuthUseCase(
+		config.DB, config.Log, config.Validator,
+		accountRepo,
+		config.Config.App.JwtSecret,
+		24*time.Hour,
+	)
+
+	jwtMiddleware := middleware.NewJWTMiddleware(config.Config.App.JwtSecret)
 
 	qrisController := http.NewQrisController(config.Log, qrisUseCase)
 	paymentController := http.NewPaymentController(config.Log, paymentUseCase, transactionUseCase)
+	merchantController := http.NewMerchantController(config.Log, merchantUseCase)
+	adminController := http.NewAdminController(config.Log, adminUseCase)
+	authController := http.NewAuthController(config.Log, authUseCase)
 
 	routeConfig := &route.RouteConfig{
-		App:                 config.App,
-		QrisController:      qrisController,
-		PaymentController:   paymentController,
-		SignatureMiddleware: sigMiddleware,
+		App:                config.App,
+		QrisController:     qrisController,
+		PaymentController:  paymentController,
+		MerchantController: merchantController,
+		AdminController:    adminController,
+		AuthController:     authController,
+		JWTMiddleware:      jwtMiddleware,
 	}
 	routeConfig.Setup()
 }

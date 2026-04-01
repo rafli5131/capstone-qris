@@ -108,7 +108,7 @@ Configuration is loaded from `config.json` and can be overridden by environment 
   },
   "app": {
     "log_level": "info",
-    "hmac_timestamp_tolerance_seconds": 300
+    "jwt_secret": "supersecretkey"
   }
 }
 ```
@@ -122,6 +122,7 @@ Configuration is loaded from `config.json` and can be overridden by environment 
 - `DATABASE_NAME` → `database.name`
 - `REDIS_ADDR` → `redis.addr`
 - `WEB_PORT` → `web.port`
+- `APP_JWT_SECRET` → `app.jwt_secret`
 
 ## 🔌 API Endpoints
 
@@ -130,23 +131,37 @@ Configuration is loaded from `config.json` and can be overridden by environment 
 
 ### QRIS Operations
 - `GET /api/qris/inquiry/{qris_payload}` - Query merchant info by QRIS payload
+- `POST /api/qris/inquiry/image` - Upload QR image and decode to inquiry
+- `POST /api/qris/merchant/image` - Register or reactivate a merchant from QRIS image
 - `POST /api/qris/payment` - Submit payment
-- `POST /api/qris/upload` - Upload QR image and decode to inquiry
-- `POST /api/qris/check` - Check transaction status
+- `GET /api/qris/status/{transaction_id}` - Check transaction status
+
+### Merchant Operations
+- `GET /api/merchant/{merchant_id}/income` - View merchant income and transaction summary
+- `GET /api/merchant/{merchant_id}/transactions` - List all transactions for a merchant
+
+### Admin Operations
+- `GET /api/admin/transactions` - List all transactions
+- `PUT /api/admin/transactions/{transaction_id}` - Edit transaction status or amount
+- `GET /api/admin/api-clients` - List API clients
+- `POST /api/admin/api-clients` - Create API client
+- `PUT /api/admin/api-clients/{client_id}` - Update client secret and status
 
 ### Authentication
 
-All `/api/*` endpoints require signature authentication:
+Public authentication endpoints:
+- `POST /api/auth/register` - Create a user account with `username`, `password`, and `initial_balance`
+- `POST /api/auth/login` - Authenticate with `username` and `password`
+
+All other `/api/*` endpoints require a valid JWT in the `Authorization` header.
 
 **Headers:**
-- `X-Client-Id`: Your API client ID
-- `X-Signature`: HMAC-SHA256 signature
-- `X-Timestamp`: Unix timestamp (seconds)
+- `Authorization`: `Bearer {token}`
 
-**Signature Calculation:**
-```
-HMAC-SHA256(client_secret, "POST|/api/qris/payment|{json_body}|{timestamp}")
-```
+**Seeded accounts** (migrated automatically):
+- `admin` / `adminpass` → role `ADMIN`
+- `user` / `userpass` → role `USER`
+- `merchant` / `merchantpass` → role `MERCHANT`
 
 ## 📖 API Documentation
 

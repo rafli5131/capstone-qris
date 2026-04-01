@@ -39,7 +39,8 @@ type RedisConfig struct {
 }
 
 type AppConfig struct {
-	LogLevel string
+	LogLevel  string
+	JwtSecret string
 }
 
 func LoadConfig() *Config {
@@ -67,7 +68,8 @@ func LoadConfig() *Config {
 			InquiryTTLSeconds: 300,
 		},
 		App: AppConfig{
-			LogLevel: "info",
+			LogLevel:  "info",
+			JwtSecret: "supersecretkey",
 		},
 	}
 
@@ -91,6 +93,7 @@ func LoadConfig() *Config {
 	cfg.Redis.InquiryTTLSeconds = getEnvInt("REDIS_INQUIRY_TTL_SECONDS", cfg.Redis.InquiryTTLSeconds)
 
 	cfg.App.LogLevel = getEnvString("APP_LOG_LEVEL", cfg.App.LogLevel)
+	cfg.App.JwtSecret = getEnvString("APP_JWT_SECRET", cfg.App.JwtSecret)
 
 	return cfg
 }

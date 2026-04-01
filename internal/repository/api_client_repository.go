@@ -26,3 +26,15 @@ func (r *ApiClientRepository) FindByClientID(db *gorm.DB, clientID string) (*ent
 	}
 	return &client, nil
 }
+
+func (r *ApiClientRepository) FindAll(db *gorm.DB) ([]entity.ApiClient, error) {
+	var clients []entity.ApiClient
+	if err := db.Find(&clients).Error; err != nil {
+		return nil, err
+	}
+	return clients, nil
+}
+
+func (r *ApiClientRepository) Update(db *gorm.DB, client *entity.ApiClient) error {
+	return db.Save(client).Error
+}

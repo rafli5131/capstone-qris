@@ -47,7 +47,7 @@ func NewPaymentUseCase(
 	}
 }
 
-func (uc *PaymentUseCase) Pay(ctx context.Context, req *model.PaymentRequest) (*model.PaymentResponse, error) {
+func (uc *PaymentUseCase) Pay(ctx context.Context, accountID string, req *model.PaymentRequest) (*model.PaymentResponse, error) {
 	if err := uc.Validator.StructCtx(ctx, req); err != nil {
 		return nil, fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
@@ -58,7 +58,7 @@ func (uc *PaymentUseCase) Pay(ctx context.Context, req *model.PaymentRequest) (*
 		return nil, fiber.NewError(fiber.StatusBadRequest, "inquiry_id is invalid or expired")
 	}
 
-	account, err := uc.AccountRepo.FindByAccountID(uc.DB, req.UserID)
+	account, err := uc.AccountRepo.FindByAccountID(uc.DB, accountID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fiber.NewError(fiber.StatusNotFound, "account not found")
@@ -99,7 +99,7 @@ func (uc *PaymentUseCase) Pay(ctx context.Context, req *model.PaymentRequest) (*
 		if rowsAffected > 0 {
 			break
 		}
-		account, err = uc.AccountRepo.FindByAccountID(uc.DB, req.UserID)
+		account, err = uc.AccountRepo.FindByAccountID(uc.DB, accountID)
 		if err != nil || account.Balance < req.Amount {
 			tx.Rollback()
 			return nil, fiber.NewError(fiber.StatusConflict, "concurrent update conflict, please retry")

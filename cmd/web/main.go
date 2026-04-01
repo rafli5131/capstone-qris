@@ -11,12 +11,9 @@ import (
 // @description     High-performance QRIS payment microservice with Redis caching and optimistic locking.
 // @host      localhost:3000
 // @BasePath  /
-// @securityDefinitions.apikey  X-Client-Id
+// @securityDefinitions.apikey  BearerAuth
 // @in                          header
-// @name                        X-Client-Id
-// @securityDefinitions.apikey  X-Client-Key
-// @in                          header
-// @name                        X-Client-Key
+// @name                        Authorization
 func main() {
 	appCfg := config.LoadConfig()
 	log := config.NewLogger(appCfg)

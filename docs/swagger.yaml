@@ -1,5 +1,49 @@
 basePath: /
 definitions:
+  model.ApiClientCreateRequest:
+    properties:
+      client_id:
+        type: string
+      client_secret:
+        type: string
+      status:
+        enum:
+        - ACTIVE
+        - INACTIVE
+        type: string
+    required:
+    - client_id
+    - client_secret
+    - status
+    type: object
+  model.ApiClientResponse:
+    properties:
+      client_id:
+        type: string
+      created_at:
+        type: string
+      status:
+        type: string
+    type: object
+  model.ApiClientUpdateRequest:
+    properties:
+      client_secret:
+        type: string
+      status:
+        enum:
+        - ACTIVE
+        - INACTIVE
+        type: string
+    type: object
+  model.AuthResponse:
+    properties:
+      account_id:
+        type: string
+      balance:
+        type: number
+      token:
+        type: string
+    type: object
   model.ErrorResponse:
     properties:
       errors:
@@ -30,6 +74,31 @@ definitions:
         $ref: '#/definitions/model.Metadata'
       status:
         type: string
+    type: object
+  model.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  model.MerchantIncomeResponse:
+    properties:
+      merchant_id:
+        type: string
+      merchant_name:
+        type: string
+      total_revenue:
+        type: number
+      transaction_count:
+        type: integer
+      transactions:
+        items:
+          $ref: '#/definitions/model.TransactionListItem'
+        type: array
     type: object
   model.MerchantResponse:
     properties:
@@ -73,14 +142,11 @@ definitions:
         type: string
       pincode:
         type: string
-      user_id:
-        type: string
     required:
     - amount
     - inquiry_id
     - payment_method
     - pincode
-    - user_id
     type: object
   model.PaymentResponse:
     properties:
@@ -100,6 +166,40 @@ definitions:
       status:
         type: string
     type: object
+  model.RegisterRequest:
+    properties:
+      initial_balance:
+        minimum: 0
+        type: number
+      password:
+        minLength: 8
+        type: string
+      username:
+        type: string
+    required:
+    - initial_balance
+    - password
+    - username
+    type: object
+  model.TransactionListItem:
+    properties:
+      account_id:
+        type: string
+      amount:
+        type: number
+      created_at:
+        type: string
+      merchant_id:
+        type: string
+      status:
+        type: string
+      trace_id:
+        type: string
+      transaction_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   model.TransactionStatusResponse:
     properties:
       final_balance:
@@ -111,6 +211,17 @@ definitions:
       transaction_id:
         type: string
     type: object
+  model.TransactionUpdateRequest:
+    properties:
+      amount:
+        type: number
+      status:
+        enum:
+        - PENDING
+        - SUCCESS
+        - FAILED
+        type: string
+    type: object
 host: localhost:3000
 info:
   contact: {}
@@ -119,6 +230,300 @@ info:
   title: QRIS Payment API
   version: "1.0"
 paths:
+  /api/admin/api-clients:
+    get:
+      consumes:
+      - application/json
+      description: Return all configured API clients.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.ApiClientResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: List API clients
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      description: Add a new API client with client id and client key.
+      parameters:
+      - description: API client create request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.ApiClientCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.ApiClientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: Create API client
+      tags:
+      - admin
+  /api/admin/api-clients/{client_id}:
+    put:
+      consumes:
+      - application/json
+      description: Edit an existing client secret or status.
+      parameters:
+      - description: Client ID
+        in: path
+        name: client_id
+        required: true
+        type: string
+      - description: API client update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.ApiClientUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ApiClientResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: Update API client
+      tags:
+      - admin
+  /api/admin/transactions:
+    get:
+      consumes:
+      - application/json
+      description: Return all transaction records for admin review.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.TransactionListItem'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: List all transactions
+      tags:
+      - admin
+  /api/admin/transactions/{transaction_id}:
+    put:
+      consumes:
+      - application/json
+      description: Modify transaction status or amount.
+      parameters:
+      - description: Transaction ID
+        in: path
+        name: transaction_id
+        required: true
+        type: string
+      - description: Transaction update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.TransactionUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.TransactionListItem'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: Update transaction
+      tags:
+      - admin
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate with username and password and return JWT token.
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Login user
+      tags:
+      - auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new account with initial balance and return JWT token.
+      parameters:
+      - description: Register request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/model.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      summary: Register new user
+      tags:
+      - auth
+  /api/merchant/{merchant_id}/income:
+    get:
+      consumes:
+      - application/json
+      description: Return total revenue and transactions for a merchant.
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: merchant_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.MerchantIncomeResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: Merchant income overview
+      tags:
+      - merchant
+  /api/merchant/{merchant_id}/transactions:
+    get:
+      consumes:
+      - application/json
+      description: Return all transactions for a merchant.
+      parameters:
+      - description: Merchant ID
+        in: path
+        name: merchant_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.TransactionListItem'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorResponse'
+      security:
+      - X-Client-Id: []
+      - X-Client-Key: []
+      summary: Merchant transactions
+      tags:
+      - merchant
   /api/qris/inquiry/{qris_payload}:
     get:
       consumes:
@@ -317,12 +722,8 @@ paths:
       tags:
       - transaction
 securityDefinitions:
-  X-Client-Id:
+  BearerAuth:
     in: header
-    name: X-Client-Id
-    type: apiKey
-  X-Client-Key:
-    in: header
-    name: X-Client-Key
+    name: Authorization
     type: apiKey
 swagger: "2.0"

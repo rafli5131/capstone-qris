@@ -27,6 +27,14 @@ func (r *AccountRepository) FindByAccountID(db *gorm.DB, accountID string) (*ent
 	return &account, nil
 }
 
+func (r *AccountRepository) FindByUsername(db *gorm.DB, username string) (*entity.Account, error) {
+	var account entity.Account
+	if err := db.Where("username = ?", username).First(&account).Error; err != nil {
+		return nil, err
+	}
+	return &account, nil
+}
+
 func (r *AccountRepository) UpdateWithOptimisticLock(db *gorm.DB, accountID string, amount float64, currentVersion int) (int64, error) {
 	result := db.Model(&entity.Account{}).
 		Where("account_id = ? AND version = ?", accountID, currentVersion).
