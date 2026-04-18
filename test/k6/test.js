@@ -14,19 +14,16 @@ export const options = {
 };
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
-const CLIENT_ID = 'MK-9921-X';
-const CLIENT_SECRET = 'penyakit-capstone-gila';
+const JWT_TOKEN = __ENV.JWT_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoidXNlcl8xMjMiLCJleHAiOjE3MzUzNjAwMDB9.example'; // Mock JWT
 const SAMPLE_QRIS = '00020101021126690021ID.CO.BANKMANDIRI.WWW01189360000801299399930211712993999340303UKE51440014ID.CO.QRIS.WWW0215ID10232756067300303UKE5204274153033605802ID5912M%20Ivan%20Store6015Jakarta%20Timur63045F26';
 
-
 export default function () {
+  let transactionIds = []; // Store transaction IDs from payments
 
   group('QRIS Inquiry', () => {
-    const sig = generateSignature('');
     const res = http.get(`${BASE_URL}/api/qris/inquiry/${SAMPLE_QRIS}`, {
       headers: {
-        'X-Client-ID': CLIENT_ID,
-        'X-Client-Key': CLIENT_SECRET,
+        'Authorization': `Bearer ${JWT_TOKEN}`,
         'Content-Type': 'application/json',
       },
     });
@@ -38,42 +35,53 @@ export default function () {
 
   sleep(0.5);
 
-  group('QRIS Payment', () => {
-    const body = JSON.stringify({
-      inquiry_id: 'inq_12345678',
-      user_id: 'user_123',
-      amount: 1000,
-      payment_method: 'balance',
-      pincode: '123456',
-    });
-    const sig = generateSignature(body);
-    const res = http.post(`${BASE_URL}/api/qris/payment`, body, {
-      headers: {
-        'X-Client-ID': CLIENT_ID,
-        'X-Client-Key': CLIENT_SECRET,
-        'Content-Type': 'application/json',
-      },
-    });
-    check(res, {
-      'status 202': (r) => r.status === 202,
-      'has transaction_id': (r) => r.json('data.transaction_id') !== undefined,
-    });
-  });
+  // Create 5 payments and store their transaction IDs
+  for (let i = 0; i < 5; i++) {
+    group(`QRIS Payment ${i + 1}`, () => {
+      const body = JSON.stringify({
+        inquiry_id: 'inq_' + Math.random().toString(36).substr(2, 9),
+        amount: Math.floor(Math.random() * 100000) + 1000,
+        payment_method: 'balance',
+        pincode: '123456',
+      });
+      const res = http.post(`${BASE_URL}/api/qris/payment`, body, {
+        headers: {
+          'Authorization': `Bearer ${JWT_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      check(res, {
+        'status 202': (r) => r.status === 202,
+        'has transaction_id': (r) => r.json('data.transaction_id') !== undefined,
+      });
 
-  group('Transaction Status', () => {
-    const transactionID = 'tx_12345678';
-    const res = http.get(`${BASE_URL}/api/transaction/status/${transactionID}`, {
-      headers: {
-        'X-Client-ID': CLIENT_ID,
-        'X-Client-Key': CLIENT_SECRET,
-        'Content-Type': 'application/json',
-      },
+      // Store transaction ID for later status checks
+      if (res.status === 202 && res.json('data.transaction_id')) {
+        transactionIds.push(res.json('data.transaction_id'));
+      }
     });
-    check(res, {
-      'status 200': (r) => r.status === 200,
-      'has status': (r) => r.json('data.status') !== undefined,
+
+    sleep(0.2); // Small delay between payments
+  }
+
+  sleep(1); // Wait for payments to process
+
+  // Check status of all created transactions
+  transactionIds.forEach((transactionId, index) => {
+    group(`Transaction Status ${index + 1} - ${transactionId}`, () => {
+      const res = http.get(`${BASE_URL}/api/qris/status/${transactionId}`, {
+        headers: {
+          'Authorization': `Bearer ${JWT_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      check(res, {
+        'status 200': (r) => r.status === 200,
+        'has status': (r) => r.json('data.status') !== undefined,
+      });
     });
+
+    sleep(0.1); // Small delay between status checks
   });
 
   sleep(1);
-}

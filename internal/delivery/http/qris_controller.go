@@ -32,8 +32,7 @@ func NewQrisController(log *logrus.Logger, qrisUseCase *usecase.QrisUseCase) *Qr
 // @Failure      401  {object}  model.ErrorResponse
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/qris/inquiry/{qris_payload} [get]
 func (ctrl *QrisController) Inquiry(c *fiber.Ctx) error {
 	rawPayload := c.Params("qris_payload")
@@ -64,8 +63,7 @@ func (ctrl *QrisController) Inquiry(c *fiber.Ctx) error {
 // @Failure      401  {object}  model.ErrorResponse
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/qris/inquiry/image [post]
 func (ctrl *QrisController) InquiryFromImage(c *fiber.Ctx) error {
 	fileHeader, err := c.FormFile("image")
@@ -105,8 +103,7 @@ func (ctrl *QrisController) InquiryFromImage(c *fiber.Ctx) error {
 // @Failure      400  {object}  model.ErrorResponse
 // @Failure      401  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/qris/merchant/image [post]
 func (ctrl *QrisController) AddMerchantFromImage(c *fiber.Ctx) error {
 	fileHeader, err := c.FormFile("image")

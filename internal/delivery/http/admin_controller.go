@@ -25,8 +25,7 @@ func NewAdminController(log *logrus.Logger, adminUseCase *usecase.AdminUseCase) 
 // @Produce      json
 // @Success      200  {object}  []model.TransactionListItem
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/admin/transactions [get]
 func (ctrl *AdminController) ListTransactions(c *fiber.Ctx) error {
 	list, err := ctrl.AdminUseCase.ListTransactions(c.Context())
@@ -53,8 +52,7 @@ func (ctrl *AdminController) ListTransactions(c *fiber.Ctx) error {
 // @Failure      400  {object}  model.ErrorResponse
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/admin/transactions/{transaction_id} [put]
 func (ctrl *AdminController) UpdateTransaction(c *fiber.Ctx) error {
 	transactionID := c.Params("transaction_id")
@@ -96,8 +94,7 @@ func (ctrl *AdminController) UpdateTransaction(c *fiber.Ctx) error {
 // @Produce      json
 // @Success      200  {object}  []model.ApiClientResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/admin/api-clients [get]
 func (ctrl *AdminController) ListApiClients(c *fiber.Ctx) error {
 	clients, err := ctrl.AdminUseCase.ListApiClients(c.Context())
@@ -122,8 +119,7 @@ func (ctrl *AdminController) ListApiClients(c *fiber.Ctx) error {
 // @Success      201  {object}  model.ApiClientResponse
 // @Failure      400  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/admin/api-clients [post]
 func (ctrl *AdminController) CreateApiClient(c *fiber.Ctx) error {
 	var req model.ApiClientCreateRequest
@@ -155,8 +151,7 @@ func (ctrl *AdminController) CreateApiClient(c *fiber.Ctx) error {
 // @Failure      400  {object}  model.ErrorResponse
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/admin/api-clients/{client_id} [put]
 func (ctrl *AdminController) UpdateApiClient(c *fiber.Ctx) error {
 	clientID := c.Params("client_id")

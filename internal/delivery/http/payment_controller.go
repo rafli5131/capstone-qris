@@ -38,8 +38,7 @@ func NewPaymentController(
 // @Failure      401  {object}  model.ErrorResponse
 // @Failure      422  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/qris/payment [post]
 func (ctrl *PaymentController) Pay(c *fiber.Ctx) error {
 	var req model.PaymentRequest
@@ -77,8 +76,7 @@ func (ctrl *PaymentController) Pay(c *fiber.Ctx) error {
 // @Failure      401  {object}  model.ErrorResponse
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/qris/status/{transaction_id} [get]
 func (ctrl *PaymentController) GetTransactionStatus(c *fiber.Ctx) error {
 	transactionID := c.Params("transaction_id")

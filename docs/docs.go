@@ -19,10 +19,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Return all configured API clients.",
@@ -57,10 +54,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Add a new API client with client id and client key.",
@@ -111,10 +105,7 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Edit an existing client secret or status.",
@@ -178,10 +169,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Return all transaction records for admin review.",
@@ -218,10 +206,7 @@ const docTemplate = `{
             "put": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Modify transaction status or amount.",
@@ -383,10 +368,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Return total revenue and transactions for a merchant.",
@@ -435,10 +417,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Return all transactions for a merchant.",
@@ -490,10 +469,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Get merchant data by QRIS image (QR code).",
@@ -554,10 +530,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Get merchant data by QRIS payload (decoded if URL-encoded).",
@@ -618,10 +591,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Create or re-activate a merchant using a QRIS image (QR code).",
@@ -676,10 +646,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Submit payment for a QRIS inquiry.",
@@ -742,10 +709,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Fetch current status and final balance for a transaction.",

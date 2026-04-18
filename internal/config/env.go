@@ -14,8 +14,9 @@ type Config struct {
 }
 
 type WebConfig struct {
-	Port    int
-	Prefork bool
+	Port        int
+	Prefork     bool
+	MetricsPort int
 }
 
 type DatabaseConfig struct {
@@ -46,8 +47,9 @@ type AppConfig struct {
 func LoadConfig() *Config {
 	cfg := &Config{
 		Web: WebConfig{
-			Port:    3000,
-			Prefork: false,
+			Port:        3000,
+			Prefork:     false,
+			MetricsPort: 8080,
 		},
 		Database: DatabaseConfig{
 			Host:            "localhost",
@@ -75,6 +77,7 @@ func LoadConfig() *Config {
 
 	cfg.Web.Port = getEnvInt("WEB_PORT", cfg.Web.Port)
 	cfg.Web.Prefork = getEnvBool("WEB_PREFORK", cfg.Web.Prefork)
+	cfg.Web.MetricsPort = getEnvInt("METRICS_PORT", cfg.Web.MetricsPort)
 
 	cfg.Database.Host = getEnvString("DATABASE_HOST", cfg.Database.Host)
 	cfg.Database.Port = getEnvInt("DATABASE_PORT", cfg.Database.Port)

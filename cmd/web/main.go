@@ -31,6 +31,7 @@ func main() {
 		Config:    appCfg,
 	})
 
+	// Run main API server
 	port := appCfg.Web.Port
 	log.Infof("Starting QRIS Payment API on port %d", port)
 

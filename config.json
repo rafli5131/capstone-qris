@@ -1,7 +1,8 @@
 {
   "web": {
     "port": 3000,
-    "prefork": false
+    "prefork": false,
+    "metrics_port": 8080
   },
   "database": {
     "host": "localhost",

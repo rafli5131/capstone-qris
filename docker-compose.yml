@@ -72,6 +72,7 @@ services:
       DATABASE_SSLMODE: disable
       REDIS_ADDR: redis:6379
       WEB_PORT: "3000"
+      METRICS_PORT: "8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -82,8 +83,102 @@ services:
     networks:
       - qris_net
 
+  # ── Metrics Server ───────────────────────────────────────────────────────────
+  metrics:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qris_metrics
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Override config.json values via env vars
+      DATABASE_HOST: postgres
+      DATABASE_PORT: "5432"
+      DATABASE_USERNAME: qris_user
+      DATABASE_PASSWORD: qris_pass
+      DATABASE_NAME: qris_db
+      DATABASE_SSLMODE: disable
+      REDIS_ADDR: redis:6379
+      WEB_PORT: "3000"
+      METRICS_PORT: "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - qris_net
+    command: ["./server", "metrics"]
+
+  # ── Monitoring Stack ────────────────────────────────────────────────────────
+
+  # Prometheus - Metrics Collection
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    container_name: qris_prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - qris_net
+
+  # Grafana - Dashboard & Visualization
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: qris_grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - qris_net
+
+  # Node Exporter - System Metrics
+  node-exporter:
+    image: prom/node-exporter:v1.7.0
+    container_name: qris_node_exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - qris_net
+
 volumes:
   postgres_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   qris_net:

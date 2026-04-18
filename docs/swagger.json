@@ -13,10 +13,7 @@
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Return all configured API clients.",
@@ -51,10 +48,7 @@
             "post": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Add a new API client with client id and client key.",
@@ -105,10 +99,7 @@
             "put": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Edit an existing client secret or status.",
@@ -172,10 +163,7 @@
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Return all transaction records for admin review.",
@@ -212,10 +200,7 @@
             "put": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Modify transaction status or amount.",
@@ -377,10 +362,7 @@
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Return total revenue and transactions for a merchant.",
@@ -429,10 +411,7 @@
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Return all transactions for a merchant.",
@@ -484,10 +463,7 @@
             "post": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Get merchant data by QRIS image (QR code).",
@@ -548,10 +524,7 @@
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Get merchant data by QRIS payload (decoded if URL-encoded).",
@@ -612,10 +585,7 @@
             "post": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Create or re-activate a merchant using a QRIS image (QR code).",
@@ -670,10 +640,7 @@
             "post": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Submit payment for a QRIS inquiry.",
@@ -736,10 +703,7 @@
             "get": {
                 "security": [
                     {
-                        "X-Client-Id": []
-                    },
-                    {
-                        "X-Client-Key": []
+                        "BearerAuth": []
                     }
                 ],
                 "description": "Fetch current status and final balance for a transaction.",

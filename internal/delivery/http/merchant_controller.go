@@ -26,8 +26,7 @@ func NewMerchantController(log *logrus.Logger, merchantUseCase *usecase.Merchant
 // @Success      200  {object}  model.MerchantIncomeResponse
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/merchant/{merchant_id}/income [get]
 func (ctrl *MerchantController) GetMerchantIncome(c *fiber.Ctx) error {
 	merchantID := c.Params("merchant_id")
@@ -57,8 +56,7 @@ func (ctrl *MerchantController) GetMerchantIncome(c *fiber.Ctx) error {
 // @Success      200  {object}  []model.TransactionListItem
 // @Failure      404  {object}  model.ErrorResponse
 // @Failure      500  {object}  model.ErrorResponse
-// @Security     X-Client-Id
-// @Security     X-Client-Key
+// @Security     BearerAuth
 // @Router       /api/merchant/{merchant_id}/transactions [get]
 func (ctrl *MerchantController) GetMerchantTransactions(c *fiber.Ctx) error {
 	merchantID := c.Params("merchant_id")

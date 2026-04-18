@@ -1,6 +1,7 @@
 package config
 
 import (
+	fiberprometheus "github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -18,6 +19,12 @@ func NewFiber(cfg *Config) *fiber.App {
 	app.Use(recover.New())
 	app.Use(requestid.New())
 	app.Use(healthcheck.New())
+
+	// Prometheus metrics middleware
+	prometheus := fiberprometheus.New("qris_app")
+	prometheus.RegisterAt(app, "/metrics")
+	app.Use(prometheus.Middleware)
+
 	app.Use(logger.New(logger.Config{
 		Format: "${time} | ${status} | ${latency} | ${method} ${path}\n",
 	}))

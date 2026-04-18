@@ -249,8 +249,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: List API clients
       tags:
       - admin
@@ -281,8 +280,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: Create API client
       tags:
       - admin
@@ -323,8 +321,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: Update API client
       tags:
       - admin
@@ -347,8 +344,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: List all transactions
       tags:
       - admin
@@ -389,8 +385,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: Update transaction
       tags:
       - admin
@@ -485,8 +480,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: Merchant income overview
       tags:
       - merchant
@@ -519,8 +513,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: Merchant transactions
       tags:
       - merchant
@@ -559,8 +552,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: QRIS inquiry
       tags:
       - qris
@@ -599,8 +591,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: QRIS inquiry from image
       tags:
       - qris
@@ -635,8 +626,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: Add merchant from image
       tags:
       - merchant
@@ -676,8 +666,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: Create payment
       tags:
       - qris
@@ -716,8 +705,7 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorResponse'
       security:
-      - X-Client-Id: []
-      - X-Client-Key: []
+      - BearerAuth: []
       summary: Get transaction status
       tags:
       - transaction
