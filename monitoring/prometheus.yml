@@ -2,43 +2,49 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
-rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
-
 scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: 'prometheus'
+  - job_name: prometheus
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
 
-  # QRIS Application metrics
-  - job_name: 'qris-app'
-    static_configs:
-      - targets: ['app:8080']
+  - job_name: go-sistem-baru
+    metrics_path: /metrics
     scrape_interval: 5s
-    metrics_path: '/metrics'
-
-  # PostgreSQL metrics
-  - job_name: 'postgres'
     static_configs:
-      - targets: ['postgres:5432']
-    scrape_interval: 10s
+      - targets: ["go-sistem-baru:3000"]
+        labels:
+          app: go-sistem-baru
+          stack: qris
 
-  # Redis metrics
-  - job_name: 'redis'
+  - job_name: legacy-system-java
+    metrics_path: /actuator/prometheus
+    scrape_interval: 5s
     static_configs:
-      - targets: ['redis:6379']
-    scrape_interval: 10s
+      - targets: ["legacy-system-java:8081"]
+        labels:
+          app: legacy-system-java
+          stack: qris
 
-  # Node Exporter (system metrics)
-  - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['node-exporter:9100']
+  - job_name: postgres
     scrape_interval: 15s
-
-  # Docker containers
-  - job_name: 'docker'
     static_configs:
-      - targets: ['host.docker.internal:9323']
-    scrape_interval: 30s
+      - targets: ["postgres-go-exporter:9187"]
+        labels:
+          app: go-sistem-baru
+          database: qris_db
+      - targets: ["postgres-legacy-exporter:9187"]
+        labels:
+          app: legacy-system-java
+          database: qris_payment
+
+  - job_name: redis
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+        labels:
+          app: shared-redis
+
+  - job_name: node-exporter
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["node-exporter:9100"]

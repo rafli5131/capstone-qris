@@ -22,9 +22,8 @@ RUN apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
 
-# Copy binary and config
+# Copy binary
 COPY --from=builder /build/server .
-COPY config.json .
 
 EXPOSE 3000
 

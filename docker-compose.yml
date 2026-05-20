@@ -1,8 +1,7 @@
 services:
-  # ── PostgreSQL ──────────────────────────────────────────────────────────────
-  postgres:
+  postgres-go:
     image: postgres:16-alpine
-    container_name: qris_postgres
+    container_name: qris_postgres_go
     restart: unless-stopped
     environment:
       POSTGRES_USER: qris_user
@@ -11,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_go_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U qris_user -d qris_db"]
       interval: 5s
@@ -20,14 +19,35 @@ services:
     networks:
       - qris_net
 
-  # ── Redis ───────────────────────────────────────────────────────────────────
+  postgres-legacy:
+    image: postgres:15-alpine
+    container_name: qris_postgres_legacy
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qris_user
+      POSTGRES_PASSWORD: qris_secret_2024
+      POSTGRES_DB: qris_payment
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_legacy_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qris_user -d qris_payment"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - qris_net
+
   redis:
     image: redis:7-alpine
     container_name: qris_redis
     restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6380:6379"
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -36,87 +56,122 @@ services:
     networks:
       - qris_net
 
-  # ── DB Migrations (one-shot) ─────────────────────────────────────────────────
-  migrate:
+  migrate-go:
     image: migrate/migrate:v4.17.1
-    container_name: qris_migrate
+    container_name: qris_migrate_go
+    restart: on-failure
     depends_on:
-      postgres:
+      postgres-go:
         condition: service_healthy
     volumes:
-      - ./db/migrations:/migrations
-    command: >
-      -path=/migrations
-      -database=postgres://qris_user:qris_pass@postgres:5432/qris_db?sslmode=disable
-      up
-    restart: on-failure
+      - ./go_sistem_baru/db/migrations:/migrations:ro
+    command:
+      - -path=/migrations
+      - -database=postgres://qris_user:qris_pass@postgres-go:5432/qris_db?sslmode=disable
+      - up
     networks:
       - qris_net
 
-  # ── Application ─────────────────────────────────────────────────────────────
-  app:
+  go-sistem-baru:
     build:
-      context: .
+      context: ./go_sistem_baru
       dockerfile: Dockerfile
-    container_name: qris_app
+    container_name: qris_go_sistem_baru
     restart: unless-stopped
+    environment:
+      DATABASE_HOST: postgres-go
+      DATABASE_PORT: "5432"
+      DATABASE_USERNAME: qris_user
+      DATABASE_PASSWORD: qris_pass
+      DATABASE_NAME: qris_db
+      DATABASE_SSLMODE: disable
+      REDIS_ADDR: redis:6379
+      WEB_PORT: "3000"
+      APP_LOG_LEVEL: info
+      APP_JWT_SECRET: supersecretkey
     ports:
       - "3000:3000"
-    environment:
-      # Override config.json values via env vars (Viper AutomaticEnv maps DB_HOST → database.host)
-      DATABASE_HOST: postgres
-      DATABASE_PORT: "5432"
-      DATABASE_USERNAME: qris_user
-      DATABASE_PASSWORD: qris_pass
-      DATABASE_NAME: qris_db
-      DATABASE_SSLMODE: disable
-      REDIS_ADDR: redis:6379
-      WEB_PORT: "3000"
-      METRICS_PORT: "8080"
     depends_on:
-      postgres:
+      postgres-go:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrate:
+      migrate-go:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/livez || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - qris_net
 
-  # ── Metrics Server ───────────────────────────────────────────────────────────
-  metrics:
+  legacy-system-java:
     build:
-      context: .
+      context: ./LegacySystemJavaWithRedis
       dockerfile: Dockerfile
-    container_name: qris_metrics
+    container_name: qris_legacy_system_java
     restart: unless-stopped
-    ports:
-      - "8080:8080"
     environment:
-      # Override config.json values via env vars
-      DATABASE_HOST: postgres
-      DATABASE_PORT: "5432"
-      DATABASE_USERNAME: qris_user
-      DATABASE_PASSWORD: qris_pass
-      DATABASE_NAME: qris_db
-      DATABASE_SSLMODE: disable
-      REDIS_ADDR: redis:6379
-      WEB_PORT: "3000"
-      METRICS_PORT: "8080"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-legacy:5432/qris_payment
+      SPRING_DATASOURCE_USERNAME: qris_user
+      SPRING_DATASOURCE_PASSWORD: qris_secret_2024
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      JWT_SECRET: YTJiM2M0ZDVlNmY3ZzhoOWkwajFrMmwzbTRuNW82cDdxOHI5czB0MXUydjN3NHg1eTZ6N2E4YjljMGQxZTJm
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus,metrics
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+    ports:
+      - "8081:8081"
     depends_on:
-      postgres:
+      postgres-legacy:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     networks:
       - qris_net
-    command: ["./server", "metrics"]
 
-  # ── Monitoring Stack ────────────────────────────────────────────────────────
+  postgres-go-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: qris_postgres_go_exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: postgresql://qris_user:qris_pass@postgres-go:5432/qris_db?sslmode=disable
+    depends_on:
+      postgres-go:
+        condition: service_healthy
+    networks:
+      - qris_net
 
-  # Prometheus - Metrics Collection
+  postgres-legacy-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: qris_postgres_legacy_exporter
+    restart: unless-stopped
+    environment:
+      DATA_SOURCE_NAME: postgresql://qris_user:qris_secret_2024@postgres-legacy:5432/qris_payment?sslmode=disable
+    depends_on:
+      postgres-legacy:
+        condition: service_healthy
+    networks:
+      - qris_net
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.58.0
+    container_name: qris_redis_exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - qris_net
+
   prometheus:
     image: prom/prometheus:v2.48.0
     container_name: qris_prometheus
@@ -127,16 +182,21 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/etc/prometheus/console_libraries
+      - --web.console.templates=/etc/prometheus/consoles
+      - --storage.tsdb.retention.time=200h
+      - --web.enable-lifecycle
+    depends_on:
+      - go-sistem-baru
+      - legacy-system-java
+      - postgres-go-exporter
+      - postgres-legacy-exporter
+      - redis-exporter
     networks:
       - qris_net
 
-  # Grafana - Dashboard & Visualization
   grafana:
     image: grafana/grafana:10.2.0
     container_name: qris_grafana
@@ -156,7 +216,6 @@ services:
     networks:
       - qris_net
 
-  # Node Exporter - System Metrics
   node-exporter:
     image: prom/node-exporter:v1.7.0
     container_name: qris_node_exporter
@@ -168,15 +227,77 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
     command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+      - --path.procfs=/host/proc
+      - --path.rootfs=/rootfs
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+    networks:
+      - qris_net
+
+  k6-compare:
+    image: grafana/k6:0.49.0
+    container_name: qris_k6_compare
+    profiles:
+      - test
+    environment:
+      GO_BASE_URL: http://go-sistem-baru:3000
+      LEGACY_BASE_URL: http://legacy-system-java:8081
+      GO_VUS: "20"
+      LEGACY_VUS: "20"
+      DURATION: 2m
+    volumes:
+      - ./test/k6:/scripts:ro
+    command: ["run", "/scripts/compare.js"]
+    depends_on:
+      go-sistem-baru:
+        condition: service_healthy
+      legacy-system-java:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    networks:
+      - qris_net
+
+  k6-go:
+    image: grafana/k6:0.49.0
+    container_name: qris_k6_go
+    profiles:
+      - test
+    environment:
+      BASE_URL: http://go-sistem-baru:3000
+      VUS: "20"
+      DURATION: 2m
+    volumes:
+      - ./test/k6:/scripts:ro
+    command: ["run", "/scripts/go_sistem_baru.js"]
+    depends_on:
+      go-sistem-baru:
+        condition: service_healthy
+    networks:
+      - qris_net
+
+  k6-legacy:
+    image: grafana/k6:0.49.0
+    container_name: qris_k6_legacy
+    profiles:
+      - test
+    environment:
+      BASE_URL: http://legacy-system-java:8081
+      VUS: "20"
+      DURATION: 2m
+    volumes:
+      - ./test/k6:/scripts:ro
+    command: ["run", "/scripts/legacy_system_java.js"]
+    depends_on:
+      legacy-system-java:
+        condition: service_healthy
     networks:
       - qris_net
 
 volumes:
-  postgres_data:
+  postgres_go_data:
+  postgres_legacy_data:
+  redis_data:
   prometheus_data:
   grafana_data:
 
