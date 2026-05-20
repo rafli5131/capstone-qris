@@ -1,8 +1,11 @@
 package config
 
 import (
+	"time"
+
 	fiberprometheus "github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -14,11 +17,19 @@ func NewFiber(cfg *Config) *fiber.App {
 		Prefork:      cfg.Web.Prefork,
 		ErrorHandler: NewErrorHandler(),
 		AppName:      "QRIS Payment API",
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  30 * time.Second,
+		BodyLimit:    10 * 1024 * 1024,
 	})
 
 	app.Use(recover.New())
 	app.Use(requestid.New())
 	app.Use(healthcheck.New())
+
+	app.Use(compress.New(compress.Config{
+		Level: compress.LevelBestSpeed,
+	}))
 
 	// Prometheus metrics middleware
 	prometheus := fiberprometheus.New("qris_app")
