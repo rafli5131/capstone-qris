@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>QRIS K6 Runner</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">QRIS Load Testing</p>
+          <h1>K6 Runner</h1>
+        </div>
+        <div class="links">
+          <a href="http://localhost:3001" target="_blank" rel="noreferrer">Grafana</a>
+          <a href="http://localhost:9090" target="_blank" rel="noreferrer">Prometheus</a>
+        </div>
+      </section>
+
+      <section class="status-panel">
+        <div>
+          <span class="label">Status</span>
+          <strong id="activeStatus">Memuat...</strong>
+        </div>
+        <div>
+          <span class="label">Run aktif</span>
+          <strong id="activeRun">-</strong>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Scenario</h2>
+          <button id="refreshBtn" type="button">Refresh</button>
+        </div>
+        <div id="scenarioGrid" class="scenario-grid"></div>
+      </section>
+
+      <section class="results-layout">
+        <div>
+          <div class="section-head">
+            <h2>Riwayat</h2>
+          </div>
+          <div id="runList" class="run-list"></div>
+        </div>
+        <div class="detail">
+          <div class="section-head">
+            <h2>Hasil K6</h2>
+          </div>
+          <div id="metrics" class="metrics"></div>
+          <pre id="logOutput" class="log-output">Pilih hasil run untuk melihat log.</pre>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

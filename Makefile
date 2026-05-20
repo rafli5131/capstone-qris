@@ -1,4 +1,4 @@
-.PHONY: run build tidy docker-up docker-down migrate swagger test-k6 test-k6-go test-k6-legacy
+.PHONY: run build tidy docker-up docker-down migrate swagger k6-web test-k6 test-k6-go test-k6-legacy test-k6-rural test-k6-normal test-k6-peak test-k6-peak-rural
 
 ## Run locally (requires postgres + redis running)
 run:
@@ -19,6 +19,10 @@ swagger:
 ## Start all services via Docker Compose
 docker-up:
 	docker compose up --build -d
+
+## Start K6 web runner with the QRIS stack
+k6-web:
+	docker compose up --build -d k6-web
 
 ## Stop all services
 docker-down:
@@ -50,3 +54,15 @@ test-k6-go:
 
 test-k6-legacy:
 	docker compose --profile test run --rm k6-legacy
+
+test-k6-rural:
+	docker compose --profile test run --rm k6-compare run /scripts/rural_test.js
+
+test-k6-normal:
+	docker compose --profile test run --rm k6-compare run /scripts/normal_test.js
+
+test-k6-peak:
+	docker compose --profile test run --rm k6-compare run /scripts/peak_test.js
+
+test-k6-peak-rural:
+	docker compose --profile test run --rm k6-compare run /scripts/peak_rural_test.js

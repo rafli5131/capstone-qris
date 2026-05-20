@@ -1,0 +1,303 @@
+:root {
+  color-scheme: light;
+  --bg: #f7f8fb;
+  --panel: #ffffff;
+  --text: #172033;
+  --muted: #667085;
+  --line: #d8dee9;
+  --blue: #2563eb;
+  --green: #15803d;
+  --red: #b42318;
+  --amber: #b54708;
+  --shadow: 0 12px 34px rgba(15, 23, 42, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+.shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 40px;
+}
+
+.topbar,
+.section-head,
+.status-panel,
+.links {
+  display: flex;
+  align-items: center;
+}
+
+.topbar {
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.eyebrow,
+.label {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: 34px;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: 20px;
+}
+
+.links {
+  gap: 10px;
+}
+
+.links a,
+button {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  padding: 9px 12px;
+  text-decoration: none;
+}
+
+button.primary {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.status-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.status-panel > div,
+.scenario-card,
+.detail,
+.run-item {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.status-panel > div {
+  padding: 16px;
+}
+
+.section-head {
+  justify-content: space-between;
+  gap: 12px;
+  margin: 22px 0 12px;
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.scenario-card {
+  display: flex;
+  min-height: 244px;
+  padding: 16px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scenario-card h3 {
+  margin-bottom: 0;
+  font-size: 17px;
+}
+
+.scenario-card p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.scenario-meta {
+  display: grid;
+  gap: 6px;
+  margin-top: auto;
+  color: #344054;
+  font-size: 13px;
+}
+
+.scenario-card button {
+  margin-top: 8px;
+  width: 100%;
+}
+
+.results-layout {
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.run-list {
+  display: grid;
+  gap: 10px;
+}
+
+.run-item {
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+}
+
+.run-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge.running {
+  background: #eff6ff;
+  color: var(--blue);
+}
+
+.badge.completed {
+  background: #ecfdf3;
+  color: var(--green);
+}
+
+.badge.failed {
+  background: #fef3f2;
+  color: var(--red);
+}
+
+.detail {
+  min-width: 0;
+  padding: 16px;
+}
+
+.metrics {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.metric-group {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.metric-group h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.muted-group {
+  background: #fbfcfe;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metric {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fbfcfe;
+}
+
+.metric span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.metric strong {
+  font-size: 18px;
+}
+
+.log-output {
+  overflow: auto;
+  max-height: 540px;
+  min-height: 320px;
+  margin: 0;
+  padding: 14px;
+  border-radius: 8px;
+  background: #111827;
+  color: #e5e7eb;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 980px) {
+  .scenario-grid,
+  .results-layout,
+  .metric-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .results-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar,
+  .status-panel,
+  .scenario-grid,
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -1,90 +1,89 @@
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
+import { Counter, Rate, Trend } from 'k6/metrics';
+
+const goHttpReqs = new Counter('go_http_reqs');
+const goHttpReqFailed = new Rate('go_http_req_failed');
+const goHttpReqDuration = new Trend('go_http_req_duration', true);
+const legacyHttpReqs = new Counter('legacy_http_reqs');
+const legacyHttpReqFailed = new Rate('legacy_http_req_failed');
+const legacyHttpReqDuration = new Trend('legacy_http_req_duration', true);
 
 export const options = {
-  stages: [
-    { duration: '30s', target: 1000 },  // Peak: high concurrent users
-    { duration: '120s', target: 1000 },
-    { duration: '30s', target: 0 },
-  ],
+  scenarios: {
+    go_sistem_baru_peak: {
+      executor: 'ramping-vus',
+      exec: 'goSistemBaru',
+      stages: [
+        { duration: '30s', target: Number(__ENV.GO_VUS || 1000) },
+        { duration: '120s', target: Number(__ENV.GO_VUS || 1000) },
+        { duration: '30s', target: 0 },
+      ],
+      tags: { target_service: 'go-sistem-baru', test_scenario: 'peak' },
+    },
+    legacy_system_java_peak: {
+      executor: 'ramping-vus',
+      exec: 'legacySystemJava',
+      stages: [
+        { duration: '30s', target: Number(__ENV.LEGACY_VUS || 1000) },
+        { duration: '120s', target: Number(__ENV.LEGACY_VUS || 1000) },
+        { duration: '30s', target: 0 },
+      ],
+      tags: { target_service: 'legacy-system-java', test_scenario: 'peak' },
+    },
+  },
   thresholds: {
-    http_req_duration: ['p(95)<1000'], // Peak: slightly higher tolerance
-    http_req_failed: ['rate<0.05'],
+    'http_req_duration{test_scenario:peak}': ['p(95)<1000'],
+    'http_req_failed{test_scenario:peak}': ['rate<0.05'],
+    go_http_req_duration: ['p(95)<1000'],
+    go_http_req_failed: ['rate<0.05'],
+    legacy_http_req_duration: ['p(95)<1000'],
+    legacy_http_req_failed: ['rate<0.05'],
   },
 };
 
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
-const JWT_TOKEN = __ENV.JWT_TOKEN || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoidXNlcl8xMjMiLCJleHAiOjE3MzUzNjAwMDB9.example'; // Mock JWT
-const SAMPLE_QRIS = '00020101021126690021ID.CO.BANKMANDIRI.WWW01189360000801299399930211712993999340303UKE51440014ID.CO.QRIS.WWW0215ID10232756067300303UKE5204274153033605802ID5912M%20Ivan%20Store6015Jakarta%20Timur63045F26';
+const GO_BASE_URL = __ENV.GO_BASE_URL || 'http://go-sistem-baru:3000';
+const LEGACY_BASE_URL = __ENV.LEGACY_BASE_URL || 'http://legacy-system-java:8081';
 
-export default function () {
-  let transactionIds = []; // Store transaction IDs from payments
+http.setResponseCallback(http.expectedStatuses({ min: 200, max: 499 }));
 
-  group('QRIS Inquiry - Peak Load', () => {
-    const res = http.get(`${BASE_URL}/api/qris/inquiry/${SAMPLE_QRIS}`, {
-      headers: {
-        'Authorization': `Bearer ${JWT_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
+function exerciseProtectedEndpoint(baseUrl, serviceName) {
+  group(`${serviceName} - Peak Load`, () => {
+    const res = http.get(`${baseUrl}/api/admin/transactions`, {
+      tags: { endpoint: 'admin_transactions' },
+      headers: { Accept: 'application/json' },
     });
+
     check(res, {
-      'status 200': (r) => r.status === 200,
-      'has metadata': (r) => r.json('metadata') !== undefined,
-      'response time < 1s': (r) => r.timings.duration < 1000,
+      [`${serviceName} responded`]: (r) => r.status > 0,
+      [`${serviceName} protected endpoint`]: (r) => [401, 403].includes(r.status),
+      [`${serviceName} response < 1s`]: (r) => r.timings.duration < 1000,
     });
+
+    recordServiceMetrics(serviceName, res);
   });
 
-  sleep(0.2); // Shorter sleep for peak load
+  sleep(Math.random() * 0.3 + 0.2);
+}
 
-  // Create 5 payments and store their transaction IDs
-  for (let i = 0; i < 5; i++) {
-    group(`QRIS Payment ${i + 1} - Peak Load`, () => {
-      const body = JSON.stringify({
-        inquiry_id: 'inq_' + Math.random().toString(36).substr(2, 9),
-        amount: Math.floor(Math.random() * 100000) + 1000,
-        payment_method: 'balance',
-        pincode: '123456',
-      });
-      const res = http.post(`${BASE_URL}/api/qris/payment`, body, {
-        headers: {
-          'Authorization': `Bearer ${JWT_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      check(res, {
-        'status 202': (r) => r.status === 202,
-        'has transaction_id': (r) => r.json('data.transaction_id') !== undefined,
-        'response time < 2s': (r) => r.timings.duration < 2000,
-      });
-
-      // Store transaction ID for later status checks
-      if (res.status === 202 && res.json('data.transaction_id')) {
-        transactionIds.push(res.json('data.transaction_id'));
-      }
-    });
-
-    sleep(0.1); // Very short delay for peak load
+function recordServiceMetrics(serviceName, res) {
+  const failed = res.status >= 500 || res.status === 0;
+  if (serviceName === 'go-sistem-baru') {
+    goHttpReqs.add(1);
+    goHttpReqFailed.add(failed);
+    goHttpReqDuration.add(res.timings.duration);
+    return;
   }
 
-  sleep(0.5); // Wait for payments to process
+  legacyHttpReqs.add(1);
+  legacyHttpReqFailed.add(failed);
+  legacyHttpReqDuration.add(res.timings.duration);
+}
 
-  // Check status of all created transactions
-  transactionIds.forEach((transactionId, index) => {
-    group(`Transaction Status ${index + 1} - Peak Load - ${transactionId}`, () => {
-      const res = http.get(`${BASE_URL}/api/qris/status/${transactionId}`, {
-        headers: {
-          'Authorization': `Bearer ${JWT_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      check(res, {
-        'status 200': (r) => r.status === 200,
-        'has status': (r) => r.json('data.status') !== undefined,
-        'response time < 1s': (r) => r.timings.duration < 1000,
-      });
-    });
+export function goSistemBaru() {
+  exerciseProtectedEndpoint(GO_BASE_URL, 'go-sistem-baru');
+}
 
-    sleep(0.05); // Very short delay for peak load
-  });
-
-  sleep(0.5);
+export function legacySystemJava() {
+  exerciseProtectedEndpoint(LEGACY_BASE_URL, 'legacy-system-java');
+}

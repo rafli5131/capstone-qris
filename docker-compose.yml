@@ -216,6 +216,32 @@ services:
     networks:
       - qris_net
 
+  k6-web:
+    build:
+      context: ./test/k6-web
+      dockerfile: Dockerfile
+    container_name: qris_k6_web
+    restart: unless-stopped
+    ports:
+      - "3002:8080"
+    environment:
+      GO_BASE_URL: http://go-sistem-baru:3000
+      LEGACY_BASE_URL: http://legacy-system-java:8081
+      RESULTS_DIR: /results
+      SCRIPTS_DIR: /scripts
+    volumes:
+      - ./test/k6:/scripts:ro
+      - k6_results:/results
+    depends_on:
+      go-sistem-baru:
+        condition: service_healthy
+      legacy-system-java:
+        condition: service_healthy
+      prometheus:
+        condition: service_started
+    networks:
+      - qris_net
+
   node-exporter:
     image: prom/node-exporter:v1.7.0
     container_name: qris_node_exporter
@@ -300,6 +326,7 @@ volumes:
   redis_data:
   prometheus_data:
   grafana_data:
+  k6_results:
 
 networks:
   qris_net:
