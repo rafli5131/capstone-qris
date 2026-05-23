@@ -1,6 +1,7 @@
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Counter, Rate, Trend } from 'k6/metrics';
+import { authHeaders, registerUser } from './auth_helpers.js';
 
 const goHttpReqs = new Counter('go_http_reqs');
 const goHttpReqFailed = new Rate('go_http_req_failed');
@@ -45,20 +46,27 @@ export const options = {
 const GO_BASE_URL = __ENV.GO_BASE_URL || 'http://go-sistem-baru:3000';
 const LEGACY_BASE_URL = __ENV.LEGACY_BASE_URL || 'http://legacy-system-java:8081';
 
-http.setResponseCallback(http.expectedStatuses({ min: 200, max: 499 }));
+http.setResponseCallback(http.expectedStatuses({ min: 200, max: 399 }));
 
-function exerciseProtectedEndpoint(baseUrl, serviceName) {
+export function setup() {
+  return {
+    goToken: registerUser(GO_BASE_URL, 'k6go'),
+    legacyToken: registerUser(LEGACY_BASE_URL, 'k6legacy'),
+  };
+}
+
+function exerciseProtectedEndpoint(baseUrl, serviceName, token) {
   sleep(Math.random() + 0.5);
 
   group(`${serviceName} - Peak Rural Network`, () => {
     const res = http.get(`${baseUrl}/api/admin/transactions`, {
       tags: { endpoint: 'admin_transactions' },
-      headers: { Accept: 'application/json' },
+      headers: authHeaders(token),
     });
 
     check(res, {
       [`${serviceName} responded`]: (r) => r.status > 0,
-      [`${serviceName} protected endpoint`]: (r) => [401, 403].includes(r.status),
+      [`${serviceName} status 200`]: (r) => r.status === 200,
       [`${serviceName} response < 5s`]: (r) => r.timings.duration < 5000,
     });
 
@@ -67,7 +75,7 @@ function exerciseProtectedEndpoint(baseUrl, serviceName) {
 }
 
 function recordServiceMetrics(serviceName, res) {
-  const failed = res.status >= 500 || res.status === 0;
+  const failed = res.status !== 200;
   if (serviceName === 'go-sistem-baru') {
     goHttpReqs.add(1);
     goHttpReqFailed.add(failed);
@@ -80,10 +88,10 @@ function recordServiceMetrics(serviceName, res) {
   legacyHttpReqDuration.add(res.timings.duration);
 }
 
-export function goSistemBaru() {
-  exerciseProtectedEndpoint(GO_BASE_URL, 'go-sistem-baru');
+export function goSistemBaru(data) {
+  exerciseProtectedEndpoint(GO_BASE_URL, 'go-sistem-baru', data.goToken);
 }
 
-export function legacySystemJava() {
-  exerciseProtectedEndpoint(LEGACY_BASE_URL, 'legacy-system-java');
+export function legacySystemJava(data) {
+  exerciseProtectedEndpoint(LEGACY_BASE_URL, 'legacy-system-java', data.legacyToken);
 }

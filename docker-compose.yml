@@ -87,6 +87,7 @@ services:
       DATABASE_SSLMODE: disable
       REDIS_ADDR: redis:6379
       WEB_PORT: "3000"
+      WEB_PREFORK: "${WEB_PREFORK:-false}"
       APP_LOG_LEVEL: info
       APP_JWT_SECRET: supersecretkey
     ports:
@@ -229,6 +230,9 @@ services:
       LEGACY_BASE_URL: http://legacy-system-java:8081
       RESULTS_DIR: /results
       SCRIPTS_DIR: /scripts
+      JWT_TOKEN: "eyJPLACEHOLDER.jwt.token"
+      CLIENT_KEY: "MK-9921-X"
+      CLIENT_SECRET: "super-secret-key-change-in-production"
     volumes:
       - ./test/k6:/scripts:ro
       - k6_results:/results
