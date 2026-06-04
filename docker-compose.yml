@@ -117,8 +117,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-legacy:5432/qris_payment
       SPRING_DATASOURCE_USERNAME: qris_user
       SPRING_DATASOURCE_PASSWORD: qris_secret_2024
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: "6379"
       JWT_SECRET: YTJiM2M0ZDVlNmY3ZzhoOWkwajFrMmwzbTRuNW82cDdxOHI5czB0MXUydjN3NHg1eTZ6N2E4YjljMGQxZTJm
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus,metrics
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
@@ -126,8 +124,6 @@ services:
       - "8081:8081"
     depends_on:
       postgres-legacy:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health || exit 1"]

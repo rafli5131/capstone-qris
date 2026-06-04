@@ -1,3 +1,4 @@
 [submodule "LegacySystemJavaWithRedis"]
 	path = LegacySystemJavaWithRedis
 	url = https://github.com/mivanf/LegacySystemJavaWithRedis
+	branch = main
